@@ -113,7 +113,7 @@ func NewWeierBot(server, nick, password string, channels []string) *WeierBot {
 func createMathbinImage(latexcode string) string {
 	resp, err := http.Get(fmt.Sprintf(mathbinPreviewURL, url.QueryEscape("[EQ]"+latexcode+"[/EQ]")))
 	if err != nil {
-		return "error"
+		return err.Error()
 	}
 
 	defer resp.Body.Close()
