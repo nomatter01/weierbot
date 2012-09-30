@@ -2,7 +2,7 @@
 *  Copyright (c) 2012 by Christoph Hack <christoph@tux21b.org>
 *                        Stefan Lendl <st.lendl@gmail.com>
 *  All rights reserved. Distributed under the Simplified BSD License.
-*/
+ */
 
 package main
 
@@ -23,11 +23,11 @@ import (
 )
 
 var (
-	timezone   = time.UTC
-	wolframURL = "http://www.wolframalpha.com/input/?i=%s"
-    mathbinPreviewURL = "http://mathbin.net/preview.cgi?body=%s"
-    mathbinURL = "http://mathbin.net/%s"
-    reMathbin = regexp.MustCompile(`equation_previews/[\d_]+\.png`)
+	timezone          = time.UTC
+	wolframURL        = "http://www.wolframalpha.com/input/?i=%s"
+	mathbinPreviewURL = "http://mathbin.net/preview.cgi?body=%s"
+	mathbinURL        = "http://mathbin.net/%s"
+	reMathbin         = regexp.MustCompile(`equation_previews/[\d_]+\.png`)
 )
 
 func init() {
@@ -111,17 +111,17 @@ func NewWeierBot(server, nick, password string, channels []string) *WeierBot {
 }
 
 func createMathbinImage(latexcode string) string {
-    resp, err := http.Get(fmt.Sprintf(mathbinPreviewURL, url.QueryEscape("[EQ]"+latexcode+"[/EQ]")))
-    if err != nil {
-        return "error"
-    }
+	resp, err := http.Get(fmt.Sprintf(mathbinPreviewURL, url.QueryEscape("[EQ]"+latexcode+"[/EQ]")))
+	if err != nil {
+		return "error"
+	}
 
-    defer resp.Body.Close()
-    body, err := ioutil.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
 
-    result := reMathbin.FindString(string(body))
+	result := reMathbin.FindString(string(body))
 
-    return fmt.Sprintf(mathbinURL, result)
+	return fmt.Sprintf(mathbinURL, result)
 }
 
 func (bot *WeierBot) handleMessage(target string, msg Message) {
@@ -136,9 +136,9 @@ func (bot *WeierBot) handleMessage(target string, msg Message) {
 		bot.send(target, fmt.Sprintf(wolframURL, url.QueryEscape(msg.Message[9:])))
 	case msg.Message == "!log":
 		bot.send(target, "http://weierbot.tux21b.org/")
-    case strings.HasPrefix(msg.Message, "!mathbin "):
-        imgurl := createMathbinImage(msg.Message[9:])
-        bot.send(target, fmt.Sprintf(imgurl))
+	case strings.HasPrefix(msg.Message, "!mathbin "):
+		imgurl := createMathbinImage(msg.Message[9:])
+		bot.send(target, fmt.Sprintf(imgurl))
 	}
 }
 
