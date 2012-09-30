@@ -275,7 +275,7 @@ func main() {
 		strings.Split(*flagChannels, ","))
 
 	go func() {
-		if err := http.ListenAndServe(":8005", bot); err != nil {
+		if err := http.ListenAndServe(*flagListen, bot); err != nil {
 			log.Fatal(err)
 		}
 	}()
