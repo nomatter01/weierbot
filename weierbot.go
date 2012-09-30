@@ -7,6 +7,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	irc "github.com/fluffle/goirc/client"
 	"html/template"
@@ -53,7 +54,9 @@ var tmpl = template.Must(template.New("weierbot").Parse(`<!doctype html>
 <h2 style="margin: .1em 0 .5em; font-size: 1.8em;">
 <a style="color:#FF1A00; text-decoration: none;" href="/{{.Title}}">{{.Title}}</a>
 </h2>
-<pre>{{.Chatlog}}</pre>
+<pre style="white-space:pre-wrap;">{{.Chatlog}}</pre>
+<p class="margin-top: 1em; color:#888;">Proudly powered by
+<a href="https://github.com/nomatter01/weierbot">weierbot</a></p>
 </body>
 </html>`))
 
@@ -78,7 +81,9 @@ func NewWeierBot(server, nick, password string, channels []string) *WeierBot {
 	w.client.Me.Ident = nick
 
 	w.client.AddHandler("connected", func(conn *irc.Conn, line *irc.Line) {
-		conn.Privmsg("NickServ", "identify "+password)
+		if password != "" {
+			conn.Privmsg("NickServ", "identify "+password)
+		}
 		for _, ch := range channels {
 			log.Printf("Joining %s\n", ch)
 			conn.Join(ch)
@@ -223,12 +228,8 @@ func (bot *WeierBot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	chatlog = []byte(template.HTMLEscapeString(string(chatlog)))
-	chatlog = reURL.ReplaceAllFunc(chatlog, func(m []byte) []byte {
-		return []byte(fmt.Sprintf("<a href=\"%s\">%s</a>", m, m))
-	})
-	chatlog = reTime.ReplaceAllFunc(chatlog, func(m []byte) []byte {
-		return []byte(fmt.Sprintf("<span style=\"color: #888;\">%s</span>", m))
-	})
+	chatlog = reURL.ReplaceAll(chatlog, []byte(`<a href="$0">$0</a>`))
+	chatlog = reTime.ReplaceAll(chatlog, []byte(`<span style="color: #888;\">$0</span>`))
 
 	data := struct {
 		Title      string
@@ -259,8 +260,19 @@ func (m Message) String() string {
 	return fmt.Sprintf("[%s] %s: %s", m.Time.Format(time.Kitchen), m.Nick, m.Message)
 }
 
+var (
+	flagServer   = flag.String("server", "irc.euirc.net", "address of the irc server")
+	flagNick     = flag.String("nick", "weierbot", "irc nickname of the bot")
+	flagPassword = flag.String("password", "", "NickServ password")
+	flagChannels = flag.String("channels", "#tm", "irc channels (comma separated)")
+	flagListen   = flag.String("http", ":8005", "http listen address")
+)
+
 func main() {
-	bot := NewWeierBot("irc.euirc.net", "weierbot2", "secret", []string{"#tm-test"})
+	flag.Parse()
+
+	bot := NewWeierBot(*flagServer, *flagNick, *flagPassword,
+		strings.Split(*flagChannels, ","))
 
 	go func() {
 		if err := http.ListenAndServe(":8005", bot); err != nil {
