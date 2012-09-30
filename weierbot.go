@@ -1,3 +1,9 @@
+/*
+*  Copyright (c) 2012 by Christoph Hack <christoph@tux21b.org>
+*                        Stefan Lendl <st.lendl@gmail.com>
+*  All rights reserved. Distributed under the Simplified BSD License.
+*/
+
 package main
 
 import (
