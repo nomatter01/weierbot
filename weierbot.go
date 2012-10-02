@@ -13,6 +13,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -137,10 +138,16 @@ func (bot *WeierBot) handleMessage(target string, msg Message) {
 	}
 
 	switch {
+	case msg.Message == "!coin":
+		if rand.Intn(2) == 0 {
+			bot.send(target, "head")
+		} else {
+			bot.send(target, "tail")
+		}
 	case strings.HasPrefix(msg.Message, "!wolfram "):
 		bot.send(target, fmt.Sprintf(wolframURL, url.QueryEscape(msg.Message[9:])))
 	case msg.Message == "!log":
-		bot.send(target, "http://weierbot.tux21b.org/")
+		bot.send(msg.Nick, "http://weierbot.tux21b.org/")
 	case strings.HasPrefix(msg.Message, "!mathbin "):
 		imgurl := createMathbinImage(msg.Message[9:])
 		bot.send(target, fmt.Sprintf(imgurl))
