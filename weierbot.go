@@ -142,7 +142,7 @@ func (bot *WeierBot) handleMessage(target string, msg Message) {
 
     command, ok := commands[msg.Message]
     if ok {
-        command(bot, target, msg) 
+        command(bot, target, msg)
     }
 
 	switch {
@@ -305,7 +305,7 @@ var (
         "countable",
         "prime",
         "complete",
-    }             
+    }
     second = []second_data{
         {"multiset", "multisets", true},
         {"integer", "integers", false},
