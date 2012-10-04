@@ -40,6 +40,9 @@ func init() {
 	timezone = tz
 }
 
+var commands map[string]func(*WeierBot, string, Message)
+
+
 var tmpl = template.Must(template.New("weierbot").Parse(`<!doctype html>
 <html>
 <head>
@@ -137,13 +140,12 @@ func (bot *WeierBot) handleMessage(target string, msg Message) {
 		target = msg.Nick
 	}
 
+    command, ok := commands[msg.Message]
+    if ok {
+        command(bot, target, msg) 
+    }
+
 	switch {
-	case msg.Message == "!coin":
-		if rand.Intn(2) == 0 {
-			bot.send(target, "head")
-		} else {
-			bot.send(target, "tail")
-		}
 	case strings.HasPrefix(msg.Message, "!wolfram "):
 		bot.send(target, fmt.Sprintf(wolframURL, url.QueryEscape(msg.Message[9:])))
 	case msg.Message == "!log":
@@ -236,7 +238,7 @@ func (bot *WeierBot) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	chatlog = []byte(template.HTMLEscapeString(string(chatlog)))
 	chatlog = reURL.ReplaceAll(chatlog, []byte(`<a href="$0">$0</a>`))
-	chatlog = reTime.ReplaceAll(chatlog, []byte(`<span style="color: #888;\">$0</span>`))
+	chatlog = reTime.ReplaceAll(chatlog, []byte(`<span style="color: #888;">$0</span>`))
 
 	data := struct {
 		Title      string
@@ -275,8 +277,110 @@ var (
 	flagListen   = flag.String("http", ":8005", "http listen address")
 )
 
+type second_data struct {
+    singular string
+    plural string
+    something bool
+}
+
+var (
+    start = []string{
+        "Just biject it to a",
+        "Just view the problem as a",
+    }
+    first = []string{
+        "abelian",
+        "associative",
+        "computable",
+        "Lebesgue-measurable",
+        "semi-decidable",
+        "simple",
+        "combinatorial",
+        "structure-preserving",
+        "diagonalizable",
+        "notsingular",
+        "orientable",
+        "twice-differentiable",
+        "thrice-differentiable",
+        "countable",
+        "prime",
+        "complete",
+    }             
+    second = []second_data{
+        {"multiset", "multisets", true},
+        {"integer", "integers", false},
+        {"metric space", "metric spaces", true},
+        {"group", "groups", true},
+        {"monoid", "monoids", true},
+        {"semigroup", "semigroups", true},
+        {"bijection", "bijections", false},
+        {"4-form", "4-forms", false},
+        {"triangulation", "triangulations", false},
+    }
+
+    suffix = map[bool]string{
+        true : "n",
+        false : "",
+    }
+)
+
+func addn(ind int) bool {
+    return first[ind][0] == 'a' ||
+        first[ind][0] == 'e' ||
+        first[ind][0] == 'i' ||
+        first[ind][0] == 'o' ||
+        first[ind][0] == 'u'
+}
+
+
+func randomStart() string {
+    var ind = rand.Intn(len(start))
+    return start[ind]
+}
+
+func randomFirst() string {
+    var ind = rand.Intn(len(first))
+    return first[ind]
+}
+
+func randomSecond(plural bool) string {
+    var ind = rand.Intn(len(start))
+    if plural {
+        return second[ind].plural
+    } else {
+        for ;!second[ind].something; {
+            ind = rand.Intn(len(second))
+        }
+        return second[ind].singular
+    }
+    return ""
+}
+
+func buildProof() string {
+    firstInd := rand.Intn(len(first))
+
+    str := suffix[addn(firstInd)]
+
+    text := fmt.Sprintf("The proof is trivial! %s%s %s %s whose elements are %s %s.", randomStart(), str, first[firstInd], randomSecond(false),
+    randomFirst(), randomSecond(true))
+    return text
+}
+
 func main() {
+    rand.Seed(time.Now().UnixNano())
 	flag.Parse()
+
+    commands = make(map[string]func(*WeierBot, string, Message))
+    commands["!coin"] = func (bot *WeierBot, target string, msg Message) {
+            if rand.Intn(2) == 0 {
+                bot.send(target, "head")
+            } else {
+                bot.send(target, "tail")
+            }
+        }
+    commands["!proof"] = func (bot *WeierBot, target string, msg Message) {
+        bot.send(target, buildProof())
+    }
 
 	bot := NewWeierBot(*flagServer, *flagNick, *flagPassword,
 		strings.Split(*flagChannels, ","))
