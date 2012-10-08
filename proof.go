@@ -120,7 +120,7 @@ func randomFirst() string {
 }
 
 func randomSecond(plural bool) string {
-	var ind = rand.Intn(len(start))
+	var ind = rand.Intn(len(second))
 	if plural {
 		return second[ind].plural
 	} else {
